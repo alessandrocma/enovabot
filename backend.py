@@ -1,5 +1,6 @@
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, RegexHandler, ConversationHandler
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, RegexHandler, ConversationHandler, CallbackQueryHandler
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 
 STATE1 = 1
 STATE2 = 2
@@ -43,6 +44,22 @@ def inputFeedback2(update, context):
 def cancel(update, context):
     return ConversationHandler.END
 
+def askForNota(update, context):
+    question = 'Qual nota você dá para o nosso app?'
+    keyboard = InlineKeyboardMarkup(
+        [[InlineKeyboardButton("👎 1", callback_data='1'),
+          InlineKeyboardButton("2", callback_data='2'),
+          InlineKeyboardButton("🤔 3", callback_data='3'),
+          InlineKeyboardButton("4", callback_data='4'),
+          InlineKeyboardButton("👍 5", callback_data='5')]])
+    update.message.reply_text(question, reply_markup=keyboard)
+
+def getNota(update, context):
+    query = update.callback_query
+    print(str(query.data))
+    message = 'Obrigada pela sua nota: ' + str(query.data) 
+    context.bot.send_message(chat_id=update.effective_chat.id, text=message)
+
 def main():
     try:
         # token = os.getenv('TELEGRAM_BOT_TOKEN', None)
@@ -59,6 +76,9 @@ def main():
             },
             fallbacks=[CommandHandler('cancel', cancel)])
         updater.dispatcher.add_handler(conversation_handler)
+
+        updater.dispatcher.add_handler(CommandHandler('nota', askForNota))
+        updater.dispatcher.add_handler(CallbackQueryHandler(getNota))
 
         print("Updater no ar1: " + str(updater))
         updater.start_polling()
